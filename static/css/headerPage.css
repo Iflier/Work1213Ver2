@@ -1,0 +1,36 @@
+#header h2{
+    height: 30px;
+    color: #8ee5ee;
+    border-radius: 3px;
+    text-align: center;
+    background-color: #ffffff;
+    font-size: 50px;
+    font-family: 华文行楷,微软雅黑;
+}
+.showResult{
+    height: 260px;
+    padding: 10px;
+    border: 2px solid #b22222;
+    border-radius: 3px;
+}
+.formStyle{
+    background-color: #d1eeee;
+    border: solid 3px #0076a3;
+    border-radius: 5px;
+    padding: 12px;
+}
+#uploadFile{
+    height: 30px;
+    color: black;
+    background-color: #63b8ff;
+}
+input{
+    border: solid 1px #0076a3;
+    height: 30px;
+    color: black;
+    background-color: #63b8ff;
+    cursor: pointer;
+    padding: 2px;
+    text-align: center;
+    text-decoration: none;
+}

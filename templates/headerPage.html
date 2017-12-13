@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>人脸框选</title>
+        <script src="../static/js/jquery-3.2.1.js"></script>
+        <!--<link rel="stylesheet" type="text/css" href="../static/css/headerPage.css"/>-->
+        <link rel="stylesheet" type="text/css" href="{{ static_url("css/headerPage.css") }}"/>
+    </head>
+    <body>
+        <div id="header">
+            <h2>人脸框选</h2>
+        </div>
+        <div class="showResult">
+            {% if filePath is not None %}
+            <div>
+                <img src={{filePath}} alt="检测结果" height="200" width='200' />
+                <p>"{{filePath}}"</p>
+            </div>
+            {% end %}
+        </div><br/>
+        <!-- input元素的name属性标识不同目的的post请求 -->
+        <div class="formStyle">
+            <!-- 向server提交图像 -->
+            <form method="post" enctype="multipart/form-data">
+                {% module xsrf_form_html() %}
+                <input type='hidden' name="upload" value="upload" />
+                <input id="uploadFile" type="file" name='pic' accept="image/jpeg" />
+                &nbsp;&nbsp;&nbsp;&nbsp;<input type="submit" value="上传图片"/>
+            </form><br/>
+            <!-- 提交检测人脸的请求 -->
+            <form method="post">
+                {% module xsrf_form_html() %}
+                <input type='hidden' name="detect" value="detect" />
+                <input type="submit" value="检测" />
+            </form><br/>
+            <!-- 提交保存结果的请求 -->
+            <form method="POST">
+                {% module xsrf_form_html() %}
+                <input type="hidden" name="save" value="save" />
+                <input type="submit" value="保存结果" />
+            </form>
+        </div>
+    </body>
+</html>
