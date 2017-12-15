@@ -66,14 +66,14 @@ class EnterHandler(BaseHandler):
         self.render("headerPage.html", **kwargs)
     
     def post(self):
-        # 目前有3种不同目的的post请求，分别为：上传图像、检测人脸和保存结果
+        """目前有3种不同目的的post请求，分别为：上传图像、检测人脸和保存结果。
+        不同的POST请求，返回的页面是一样的，关键在于更改了filePath参数指向的路径
+        """
         # print("In detect post: {0}".format(self.get_argument('pic', default=None)))
-        print("request path: {0}".format(self.request.headers))
         if self.get_argument('detect', default=None):
             # 如果是触发检测图片的请求
             print("In detect: {0}".format(self.get_argument('detect', default=None)))
-            global location
-            # json 此时 不能 序列化对象了，所以才使用了global，尽管这样并不美好
+            global location  # json 此时 不能 序列化对象了，所以才使用了global，尽管这样并不美好
             kwargs = dict()
             # 读取图片的路径。调用后返回文件名和框选区域的坐标
             fileName, loc = processTools.getRectangel(os.path.join('static',
@@ -88,9 +88,10 @@ class EnterHandler(BaseHandler):
                                               )
             location = loc
             print("Cookie filename: {0}".format(self.get_secure_cookie("filename").decode()))
+            # 修改了filePath指向的路径。filePath是相对于static目录的一个相对路径
             self.render('headerPage.html', **kwargs)
         elif self.get_argument("save", default=None):
-            # 如果是提交了保存的请求
+            # 如果是提交了保存检测结果的请求
             print("In save: {0}".format(self.get_argument("save", default=None)))
             kwargs = dict()
             if not os.path.exists(os.path.join(os.path.dirname(__file__),
@@ -130,11 +131,9 @@ class EnterHandler(BaseHandler):
                     with open(os.path.join('static', 'img', 'imgFiles',
                                            filename), 'wb') as file:
                         file.write(info['body'])
-                    kwargs["filePath"] = os.path.join('img', 'imgFiles',
-                                                      filename)
+                    kwargs["filePath"] = os.path.join('img', 'imgFiles', filename)
+                    # filePath保存的路径是相对于static目录的
                     self.set_secure_cookie("filename", filename)
-                    # 可以在各个请求之间传递
-                    print("Path: {0}".format(kwargs["filePath"]))
             self.render('headerPage.html', **kwargs)
         else:
             kwargs = dict()
@@ -142,6 +141,7 @@ class EnterHandler(BaseHandler):
             self.render("headerPage.html", **kwargs)
     
     def on_finish(self):
+        # 添加一些清理工作，如关闭游标，数据库等
         print("Request finished.")
 
 

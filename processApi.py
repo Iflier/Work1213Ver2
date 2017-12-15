@@ -57,7 +57,7 @@ class imgProcess():
         processedFilePath = os.path.join(os.path.dirname(__file__),
                                          'static', 'img',
                                          'imgFilesProcessed',
-                                         imgFilePath.split('\\')[-1]
+                                         imgFilePath.split(os.sep)[-1]  # 使用特定平台的路径分隔符
                                          )
         if not os.path.exists(processedFilePath):
             # 如果将要保存的文件不存在，才会保存
