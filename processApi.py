@@ -18,7 +18,6 @@ import csv
 import json
 import hashlib
 import os.path
-from urllib import parse
 
 import cv2
 import numpy as np
@@ -42,7 +41,6 @@ class imgProcess():
         print("File path: {0}".format(imgFilePath))
         print(os.path.join(os.path.dirname(__file__), imgFilePath))
         img = cv2.imdecode(np.fromfile(imgFilePath, dtype=np.uint8, count=-1), cv2.IMREAD_UNCHANGED)
-        print("Shape {0}".format(img.shape))
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
         faces = self.face_cascade.detectMultiScale(gray, 1.03, 5, 0, (50, 50))
@@ -63,10 +61,8 @@ class imgProcess():
                                          )
         if not os.path.exists(processedFilePath):
             # 如果将要保存的文件不存在，才会保存
-            # 使用urllib.parse.unquote解释%xx形式的字符串
             ext = os.path.splitext(processedFilePath)[-1]  # 返回文件的扩展名
-            # print("Unquote path: {0}".format(parse.unquote(processedFilePath)))
-            cv2.imencode(ext, img)[-1].tofile(parse.unquote(processedFilePath))
+            cv2.imencode(ext, img)[-1].tofile(processedFilePath)
         # 返回文件名和人脸矩形框的坐标
         # print(loc)
         return imgFilePath.split('\\')[-1], loc
