@@ -68,6 +68,7 @@ class EnterHandler(BaseHandler):
     def post(self):
         # 目前有3种不同目的的post请求，分别为：上传图像、检测人脸和保存结果
         # print("In detect post: {0}".format(self.get_argument('pic', default=None)))
+        print("request path: {0}".format(self.request.headers))
         if self.get_argument('detect', default=None):
             # 如果是触发检测图片的请求
             print("In detect: {0}".format(self.get_argument('detect', default=None)))
@@ -86,7 +87,7 @@ class EnterHandler(BaseHandler):
                                               fileName
                                               )
             location = loc
-            # print("Serialize: {0}".format(json.dumps(79)))
+            print("Cookie filename: {0}".format(self.get_secure_cookie("filename").decode()))
             self.render('headerPage.html', **kwargs)
         elif self.get_argument("save", default=None):
             # 如果是提交了保存的请求
@@ -97,7 +98,7 @@ class EnterHandler(BaseHandler):
                 os.mkdir(os.path.join(os.path.dirname(__file__), 'savedResult'))
             with open(os.path.join(os.path.dirname(__file__), "savedResult",
                                    'result.csv'),
-                      'a+', newline='') as csvfile:
+                      'a+', newline='', encoding='utf-8') as csvfile:
                 writer = csv.writer(csvfile, delimiter=',')
                 writer.writerow([self.get_secure_cookie("filename").decode()] + [location])
             kwargs['filePath'] = os.path.join('img',
