@@ -3,8 +3,14 @@
 Dec: 尽管HTML页面上显示的图像被缩放了，但是保存的检测结果对应于原始图像大小
 Created on : 2017.12.12
 Modified on : 2017.12.13
-json无法序列化对象了
+json无法序列化numpy.ndarray对象。
 优化访问静态文件方法
+Modified on : 2017.12.17
+直接使用list强制转换(ndarray)是不可以的，
+因为转换前与转换后的类型多数情况下是不能对应到Python的类型，
+因此使用ndarray的tolist()方法，进行类型转换
+增强容错性：对于非人脸或者不包含人脸的图像也能正确返回
+如果没有检测到人脸矩形，它不会被进一步地保存到imgFilesProcessed文件夹中
 Author: Iflier
 """
 import os
@@ -69,12 +75,11 @@ class EnterHandler(BaseHandler):
         """目前有3种不同目的的post请求，分别为：上传图像、检测人脸和保存结果。
         不同的POST请求，返回的页面是一样的，关键在于更改了filePath参数指向的路径
         """
-        # print("In detect post: {0}".format(self.get_argument('pic', default=None)))
+        print("In detect post: {0}".format(self.get_argument('pic', default=None)))
         if self.get_argument('detect', default=None):
             # 如果是触发检测图片的请求
-            print("In detect: {0}".format(self.get_argument('detect', default=None)))
-            global location  # json 此时 不能 序列化对象了，所以才使用了global，尽管这样并不美好
             kwargs = dict()
+            print("In detect: {0}".format(self.get_argument('detect', default=None)))
             # 读取图片的路径。调用后返回文件名和框选区域的坐标
             fileName, loc = processTools.getRectangel(os.path.join('static',
                                                                    'img',
@@ -82,18 +87,28 @@ class EnterHandler(BaseHandler):
                                                                    self.get_secure_cookie("filename").decode()
                                                                    )
                                                       )
-            kwargs['filePath'] = os.path.join('img',
-                                              'imgFilesProcessed',
-                                              fileName
-                                              )
-            location = loc
+            if isinstance(loc, type(None)):
+                # 如果没有检测到人脸，返回原文件的路径.filePath是相对于static目录的一个相对路径
+                self.set_secure_cookie('loc', json.dumps(None))  # 不同类型的loc区别对待
+                kwargs['filePath'] = os.path.join('img',
+                                                  'imgFiles',
+                                                  fileName
+                                                  )
+            else:
+                # 把坐标保存到cookie中
+                self.set_secure_cookie('loc', json.dumps(loc.tolist()))
+                kwargs['filePath'] = os.path.join('img',
+                                                  'imgFilesProcessed',
+                                                  fileName
+                                                  )
             print("Cookie filename: {0}".format(self.get_secure_cookie("filename").decode()))
-            # 修改了filePath指向的路径。filePath是相对于static目录的一个相对路径
             self.render('headerPage.html', **kwargs)
         elif self.get_argument("save", default=None):
             # 如果是提交了保存检测结果的请求
             print("In save: {0}".format(self.get_argument("save", default=None)))
             kwargs = dict()
+            location = json.loads(self.get_secure_cookie('loc').decode())
+            # type = list或者None。没有进一步还原loc类型是因为，保存到文件的时候还是需要被序列化:-)
             if not os.path.exists(os.path.join(os.path.dirname(__file__),
                                                'savedResult')):
                 os.mkdir(os.path.join(os.path.dirname(__file__), 'savedResult'))
@@ -102,11 +117,19 @@ class EnterHandler(BaseHandler):
                       'a+', newline='', encoding='utf-8') as csvfile:
                 writer = csv.writer(csvfile, delimiter=',')
                 writer.writerow([self.get_secure_cookie("filename").decode()] + [location])
-            kwargs['filePath'] = os.path.join('img',
-                                              'imgFilesProcessed',
-                                              self.get_secure_cookie("filename").decode()
-                                              )
-            # 更改了图片的路径，指向检测后保存的结果图像的路径
+            if isinstance(location, type(None)):
+                # 如果图像中不包含人脸，返回上传的图像保存的路径
+                kwargs['filePath'] = os.path.join('img',
+                                                'imgFiles',
+                                                self.get_secure_cookie("filename").decode()
+                                                )
+            else:
+                # 否则返回处理后的图像的路径
+                kwargs['filePath'] = os.path.join('img',
+                                                'imgFilesProcessed',
+                                                self.get_secure_cookie("filename").decode()
+                                                )
+                # 更改了图片的路径，指向检测后保存的结果图像的路径
             self.render('headerPage.html', **kwargs)
         elif self.get_argument("upload", default=None):
             # 通过input元素的属性值区分不同的请求目的
